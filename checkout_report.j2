@@ -1,0 +1,97 @@
+<html class="no-js">
+<head>
+<title>Checkouts Report for Change Control #{{cc_id}}</title>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="./deps/reset.css" type="text/css">
+<link rel="stylesheet" href="./deps/diff.css" type="text/css">
+<link class="syntaxdef" rel="stylesheet" href="./deps/codeformats/vs.css" type="text/css">
+</head>
+<body>
+
+<!-- Top button courtesy of Heather Tovey: https://heathertovey.com/blog/floating-back-to-top-button/ -->
+<style>
+  .back-to-top {
+    background-color: #000000;
+    color: #FFFFFF;
+    opacity: 0;
+    transition: opacity .6s ease-in-out;
+    z-index: 999;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 50px;
+    height: 50px;
+    box-sizing: border-box;
+    border-radius: 0%;
+  }
+  a.back-to-top {
+    font-weight: 1000;
+    letter-spacing: 2px;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.6;
+    padding-left: 2px;
+    padding-top: 14px;
+  }
+  .back-to-top:hover, .back-to-top:focus, .back-to-top:visited {
+    color: #FFFFFF;
+  }
+  .back-to-top.show {
+    opacity: 1;
+  }
+</style>
+
+<a href="#toc" id="back-to-top" class="back-to-top" style="display: inline;">Top</a>
+
+<script>
+  var link = document.getElementById("back-to-top");
+  var amountScrolled = 250;
+  window.addEventListener('scroll', function(e) {
+      if ( window.pageYOffset > amountScrolled ) {
+          link.classList.add('show');
+      } else {
+          link.className = 'back-to-top';
+      }
+  });
+  link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var distance = 0 - window.pageYOffset;
+      var increments = distance/(500/16);
+      function animateScroll() {
+          window.scrollBy(0, increments);
+          if (window.pageYOffset <= document.body.offsetTop) {
+              clearInterval(runAnimation);
+          }
+      };
+      // Loop the animation function
+      var runAnimation = setInterval(animateScroll, 16);
+  });
+</script>
+
+<h2>Checkouts Report for Change Control #{{cc_id}}</h2>
+
+<a id="toc"><h3>Table of Contents</h3></a>
+<ul>
+{% for device_name in diff_output_dict.keys() %}
+<li><a href="#{{device_name}}">{{device_name}}</a></li>
+<ul>
+{% for command in diff_output_dict[device_name].keys() %}
+<li><a href="#{{device_name}}_{{command.strip()}}">{{command.strip()}}</a></li>
+{% endfor %}
+</ul>
+{% endfor %}
+</ul>
+
+{% for device_name in diff_output_dict.keys() %}
+<a id="{{device_name}}"><h3>{{device_name}}</h3></a>
+{% for command, output in diff_output_dict[device_name].items() %}
+<a id="{{device_name}}_{{command.strip()}}"><h4>{{command.strip()}}</h4></a>
+{{output}}<br>
+{% endfor %}
+{% endfor %}
+</body>
+</html>

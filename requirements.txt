@@ -1,0 +1,5 @@
+jinja2
+netmiko
+pygments
+pysnmp
+pysocks
