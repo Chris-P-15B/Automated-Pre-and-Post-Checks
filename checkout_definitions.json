@@ -1,0 +1,227 @@
+{
+    "arista_eos": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show vlan brief",
+                "show ip arp vrf all",
+                "show interface status",
+                "show ip interface brief",
+                "show interface counter error",
+                "show interface counter discard",
+                "show lldp neighbor",
+                "show ip ospf neighbor",
+                "show ip bgp summary vrf all",
+                "CHECK_BGP",
+                "show ip route vrf all summary",
+                "show ip route vrf all",
+                "show system environment all",
+                "show version",
+                "show inventory",
+                "show running-config"
+            ],
+            "serv": [
+                "show mac address-table",
+                "show ip bgp vrf all",
+                "show mlag detail",
+                "PING_SWEEP"
+            ]
+        }
+    },
+    "aruba_os": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show vlan",
+                "show arp",
+                "show interface brief",
+                "show ip interface brief",
+                "show lldp neighbor",
+                "show ip ospf neighbor",
+                "show ip route",
+                "show environment",
+                "show version",
+                "show system inventory",
+                "show module",
+                "show running-config"
+            ],
+            "user": [
+                "show spanning-tree detail",
+                "show port-access clients",
+                "show mac-address-table",
+                "show vsf detail",
+                "PING_SWEEP"                
+            ]
+        }
+    },
+    "cisco_ios": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show cdp neighbor",
+                "show ip arp",
+                "show interface status",
+                "show interface counters errors",
+                "show ip interface brief",
+                "show ip ospf neighbor detail",
+                "show ip route summary",
+                "show ip route",
+                "show environment all",
+                "show version",
+                "show inventory",
+                "show module",
+                "show running-config"
+            ],
+            "user": [
+                "show vlan brief",
+                "show spanning-tree detail",
+                "show authentication sessions",
+                "show mac address-table",
+                "show standby",
+                "PING_SWEEP"
+            ],
+            "wan": [
+                "show vlan brief",
+                "show spanning-tree detail",
+                "show mac address-table",
+                "show standby",
+                "show vrf",
+                "show ip bgp summary",
+                "CHECK_BGP",
+                "show ip bgp",
+                "show ip nat translation",
+                "show ip sla summary"
+            ]
+        }
+    },
+    "cisco_xe": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show cdp neighbor",
+                "show ip arp",
+                "show interface status",
+                "show interface counters errors",
+                "show ip interface brief",
+                "show ip ospf neighbor detail",
+                "show ip route summary",
+                "show ip route",
+                "show environment all",
+                "show version",
+                "show inventory",
+                "show module",
+                "show running-config"
+            ],
+            "user": [
+                "show vlan brief",
+                "show spanning-tree detail",
+                "show authentication sessions",
+                "show mac address-table",
+                "show standby",
+                "PING_SWEEP"
+            ],
+            "wan": [
+                "show vlan brief",
+                "show spanning-tree detail",
+                "show mac address-table",
+                "show standby",
+                "show vrf",
+                "show ip bgp summary",
+                "CHECK_BGP",
+                "show ip bgp",
+                "show ip nat translation",
+                "show ip sla summary"
+            ]
+        }
+    },
+    "cisco_nxos": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show vlan brief",
+                "show spanning-tree detail",
+                "show ip arp vrf all",
+                "show interface status",
+                "show ip interface brief",
+                "show interface counters errors",
+                "show cdp neighbor",
+                "show lldp neighbor",
+                "show vdc detail",
+                "show ip ospf neighbor",
+                "show ip route vrf all summary",
+                "show ip route vrf all",
+                "show environment",
+                "show version",
+                "show inventory",
+                "show module",
+                "show running-config"
+            ],
+            "serv": [
+                "show mac address-table",
+                "show ip bgp vrf all",
+                "show hsrp",
+                "show vpc",
+                "show fex detail",
+                "show environment fex all",
+                "PING_SWEEP"
+            ]
+        }
+    },
+    "juniper": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show system uptime",
+                "show interfaces extensive",
+                "show spanning-tree interface detail",
+                "show lldp neighbors",
+                "show arp no-resolve",
+                "show ospf neighbor",
+                "show route",
+                "show chassis environment",
+                "show system alarms",
+                "show chassis alarms",
+                "show version",
+                "show chassis hardware",
+                "show configuration | display set"
+            ],
+            "serv": [
+                "show vlans",
+                "show ethernet-switching table",
+                "show bridge mac-table",
+                "PING_SWEEP"
+            ]
+        }
+    },
+    "juniper_junos": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show system uptime",
+                "show interfaces extensive",
+                "show spanning-tree interface detail",
+                "show lldp neighbors",
+                "show arp no-resolve",
+                "show ospf neighbor",
+                "show route",
+                "show chassis environment",
+                "show system alarms",
+                "show chassis alarms",
+                "show version",
+                "show chassis hardware",
+                "show configuration | display set"
+            ],
+            "serv": [
+                "show vlans",
+                "show ethernet-switching table",
+                "show bridge mac-table",
+                "PING_SWEEP"
+            ]
+        }
+    }
+}

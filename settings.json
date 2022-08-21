@@ -1,0 +1,11 @@
+{
+    "username": "auser",
+    "sender_email": "someobody@somewhere.com",
+    "receiver_email": "someone@somewhere.com",
+    "temp_path": "/tmp/",
+    "smtp_server": "smtp-relay.somewhere.com",
+    "smtp_port": 25,
+    "proxy_server": "",
+    "proxy_type": 3,
+    "proxy_port": 8080
+}
