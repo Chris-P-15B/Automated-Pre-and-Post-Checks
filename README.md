@@ -69,38 +69,40 @@ There are two special commands - "CHECK_BGP" & "PING_SWEEP", these must be in up
 
 Example checkout definition:
 
-> {
->     "arista_eos": {
->         "community": "public",
->         "commands": {
->             "common": [
->                 "show clock",
->                 "show vlan brief",
->                 "show ip arp vrf all",
->                 "show interface status",
->                 "show ip interface brief",
->                 "show interface counter error",
->                 "show interface counter discard",
->                 "show lldp neighbor",
->                 "show ip ospf neighbor",
->                 "show ip bgp summary vrf all",
->                 "CHECK_BGP",
->                 "show ip route vrf all summary",
->                 "show ip route vrf all",
->                 "show system environment all",
->                 "show version",
->                 "show inventory",
->                 "show running-config"
->             ],
->             "serv": [
->                 "show mac address-table",
->                 "show ip bgp vrf all",
->                 "show mlag detail",
->                 "PING_SWEEP"
->             ]
->         }
->     }
-> }
+```
+{
+    "arista_eos": {
+        "community": "public",
+        "commands": {
+            "common": [
+                "show clock",
+                "show vlan brief",
+                "show ip arp vrf all",
+                "show interface status",
+                "show ip interface brief",
+                "show interface counter error",
+                "show interface counter discard",
+                "show lldp neighbor",
+                "show ip ospf neighbor",
+                "show ip bgp summary vrf all",
+                "CHECK_BGP",
+                "show ip route vrf all summary",
+                "show ip route vrf all",
+                "show system environment all",
+                "show version",
+                "show inventory",
+                "show running-config"
+            ],
+            "serv": [
+                "show mac address-table",
+                "show ip bgp vrf all",
+                "show mlag detail",
+                "PING_SWEEP"
+            ]
+        }
+    }
+}
+```
 
 ## Usage
 Command line parameters, for those with spaces enclose the parameter in "":
