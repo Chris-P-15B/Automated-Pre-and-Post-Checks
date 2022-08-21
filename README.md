@@ -44,13 +44,21 @@ Install the required Python packages via *pip install -r requirements.txt*
 *settings.json* contains multiple parameters that should be updated to match your environment:
 
 username - username of the account used to connect to network devices.
+
 sender_email - email address checkout reports are sent from.
+
 receiver_email - email address checkout reports are sent to.
+
 temp_path - path where temporary files should be stored.
+
 smtp_server - FQDN of SMTP server to use for sending emails.
+
 smtp_port - port number used by the SMTP server.
+
 proxy_server - if specified, FQDN of proxy server to use to reach the SMTP server.
+
 proxy_type - type of proxy server, 1 = SOCKS4, 2 = SOCKS5 & 3 = HTTP.
+
 proxy_port - port number used by the proxy server.
 
 *checkout_definitions.json* contains a list of supported platforms, commands to run against each platform & role specific commands. The platform names are the NetMiko device type, see https://github.com/ktbyers/netmiko/blob/develop/PLATFORMS.md for a complete list.
