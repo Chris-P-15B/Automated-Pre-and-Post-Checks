@@ -6,6 +6,7 @@ Connects via SSH to a specified list of network devices, automatically detects t
 Each SSH session to a device is handled in a separate thread, for reduced execution times when running against multiple devices.
 
 Contains modified version of diff2HtmlCompare, (c) 2016 Alex Goodman, https://github.com/wagoodman/diff2HtmlCompare & used under the MIT licence.
+
 Contains modified version of NetMiko's ssh_autodetect.py, (c) 2016 - 2023 Kirk Byers, https://github.com/ktbyers/netmiko & used under the MIT licence.
 
 Uses code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php & used under the zlib/libpng licence.
