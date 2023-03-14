@@ -29,7 +29,7 @@
             ]
         }
     },
-    "aruba_os": {
+    "aruba_osswitch": {
         "community": "public",
         "commands": {
             "common": [
@@ -52,7 +52,7 @@
                 "show port-access clients",
                 "show mac-address-table",
                 "show vsf detail",
-                "PING_SWEEP"                
+                "PING_SWEEP"
             ]
         }
     },

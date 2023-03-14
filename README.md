@@ -1,11 +1,12 @@
 # Automated Pre & Post Checks
 
-(c) 2022, Chris Perkins
+Copyright (c) 2022 - 2023, Chris Perkins
 
 Connects via SSH to a specified list of network devices, automatically detects the platform & runs platform specific commands. Features additional role specific checks based on partial hostnames, optional ping sweep (pulls interface IP addresses via SNMP) & VRF aware BGP peer routes check. HTML post checks report with command output diffs is emailed out to specified email address as a zip file attachment.
 Each SSH session to a device is handled in a separate thread, for reduced execution times when running against multiple devices.
 
 Contains modified version of diff2HtmlCompare, (c) 2016 Alex Goodman, https://github.com/wagoodman/diff2HtmlCompare & used under the MIT licence.
+Contains modified version of NetMiko's ssh_autodetect.py, (c) 2016 - 2023 Kirk Byers, https://github.com/ktbyers/netmiko & used under the MIT licence.
 
 Uses code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php & used under the zlib/libpng licence.
 
@@ -17,11 +18,12 @@ HTML top button courtesy of Heather Tovey: https://heathertovey.com/blog/floatin
 Caveats:
 1. IPv4 only for the ping sweep & BGP peer routes check.
 2. BGP peer check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
-3. SMTP server authentication isn't supported currently.
+3. SMTP server authentication code path isn't exposed currently.
 4. SNMP v3 isn't supported currently.
 
 
 Version History:
+* v1.1 - Updated NetMiko Exceptions, code tidying & added NetMiko auto-detection for Aruba CX devices.
 * v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a separate thread per device.
 * v0.4 - Improvements to settings & checkouts validation, added optional proxy server support.
 * v0.3 - Integrated diff2HtmlCompare for prettier output & now storing outputs in a zip file.
@@ -30,13 +32,13 @@ Version History:
 
 ## Pre-Requisites
 * Python 3.7+
-* NetMiko 4.0+
+* NetMiko 4.1+
 * Runs on Linux
 
 ## Installation
 Copy the entire project into a directory on a Linux server that has both SSH & SNMP access to the network devices that checkouts will be performed on.
 
-Install the required Python packages via *pip install -r requirements.txt* 
+Install the required Python packages via *pip install -r requirements.txt*
 
 ## Configuration
 *pre-post_checker.py* has a global variable "BASE_PATH" that should be updated to reflect the path where the tool is located. By default it is set to "./".
@@ -68,7 +70,6 @@ Within each platform there is the SNMP community to use & the list of commands t
 There are two special commands - "CHECK_BGP" & "PING_SWEEP", these must be in upper case. CHECK_BGP will call the VRF aware BGP peer routes checks. PING_SWEEP will poll a device's interface IP addresses & subnet masks via SNMP, then run a ping sweep against these networks.
 
 Example checkout definition:
-
 ```
 {
     "arista_eos": {

@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
 """
-(c) 2022, Chris Perkins
+Copyright (c) 2022 - 2023, Chris Perkins
 Licence: BSD 3-Clause
 
 Automated pre & post checks with platform specific code paths, additional role checks based on partial
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
-Contains modified version of diff2HtmlCompare, (c) 2016 Alex Goodman, https://github.com/wagoodman/diff2HtmlCompare
-& used under the MIT licence.
-
+v1.1 - Updated NetMiko Exceptions, code tidying & added NetMiko auto-detection for Aruba CX devices.
 v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a
 separate thread per device.
 v0.4 - Improvements to settings & checkouts validation, added optional proxy server support.
@@ -34,12 +32,14 @@ import shutil
 import threading
 from zipfile import ZipFile, ZIP_DEFLATED
 from pathlib import Path
-from netmiko.ssh_exception import (
+from netmiko.exceptions import (
     NetMikoTimeoutException,
     NetMikoAuthenticationException,
 )
 from paramiko.ssh_exception import SSHException
-from netmiko.ssh_autodetect import SSHDetect
+
+# from netmiko.ssh_autodetect import SSHDetect
+from ssh_autodetect import SSHDetect
 from netmiko.ssh_dispatcher import ConnectHandler
 from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 from email import encoders
@@ -88,7 +88,7 @@ def perform_checkouts(
                 "username": settings["username"],
                 "password": password,
                 "secret": password,
-                "read_timeout_override": 100,
+                "read_timeout_override": 60,
                 "fast_cli": False,
             }
         )
@@ -108,6 +108,7 @@ def perform_checkouts(
             secret=password,
             read_timeout_override=100,
             fast_cli=False,
+            global_cmd_verify=False,
         )
     except (NetMikoAuthenticationException):
         checkout_messages += f"Error: Failed to execute CLI on {target_device} due to incorrect credentials.\n"
@@ -172,7 +173,7 @@ def perform_checkouts(
                 checkout_messages += f"Error: Unable to write file {file_path}.\n"
         else:
             cli_output = f"{command}\n"
-            cli_output += device.send_command(command, cmd_verify=False)
+            cli_output += device.send_command(command)
             file_path = Path(
                 dir_path
                 / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -191,7 +192,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
     """VRF aware checkout for BGP neighbour advertised & received routes"""
     checkout_messages = ""
     if best_match == "arista_eos":
-        cli_output = device.send_command("show vrf", cmd_verify=False)
+        cli_output = device.send_command("show vrf")
         VRF_names = []
         # Find column heading line & then parse VRF names in lines below
         cntr = 0
@@ -205,9 +206,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 VRF_names.append(columns[0])
 
         for VRF in VRF_names:
-            cli_output = device.send_command(
-                f"show ip bgp summary vrf {VRF}", cmd_verify=False
-            )
+            cli_output = device.send_command(f"show ip bgp summary vrf {VRF}")
             # Find column heading line & then parse BGP peers in lines below
             cntr = 0
             for line in cli_output.splitlines():
@@ -219,7 +218,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 if ip_addr:
                     command = f"show ip bgp neighbor {ip_addr.group(1)} advertised-routes vrf {VRF}"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -233,7 +232,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
                     command = f"show ip bgp neighbor {ip_addr.group(1)} received-routes vrf {VRF}"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -247,7 +246,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
 
     elif best_match == "cisco_ios" or best_match == "cisco_xe":
-        cli_output = device.send_command("show vrf", cmd_verify=False)
+        cli_output = device.send_command("show vrf")
         VRF_names = []
         # Find column heading line & then parse VRF names in lines below
         cntr = 0
@@ -261,7 +260,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 VRF_names.append(columns[0])
 
         # IOS syntax for the default VRF is different from other VRFs
-        cli_output = device.send_command(f"show ip bgp summary", cmd_verify=False)
+        cli_output = device.send_command(f"show ip bgp summary")
         # Find column heading line & then parse BGP peers in lines below
         cntr = 0
         for line in cli_output.splitlines():
@@ -273,7 +272,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
             if ip_addr:
                 command = f"show ip bgp neighbor {ip_addr.group(1)} advertised-routes"
                 cli_output2 = f"{command}\n"
-                cli_output2 += device.send_command(command, cmd_verify=False)
+                cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
                     / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -285,7 +284,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     checkout_messages += f"Error: Unable to write file {file_path}.\n"
                 command = f"show ip bgp neighbor {ip_addr.group(1)} received-routes"
                 cli_output2 = f"{command}\n"
-                cli_output2 += device.send_command(command, cmd_verify=False)
+                cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
                     / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -297,9 +296,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     checkout_messages += f"Error: Unable to write file {file_path}.\n"
 
         for VRF in VRF_names:
-            cli_output = device.send_command(
-                f"show ip bgp vpnv4 vrf {VRF} summary", cmd_verify=False
-            )
+            cli_output = device.send_command(f"show ip bgp vpnv4 vrf {VRF} summary")
             # Find column heading line & then parse BGP peers in lines below
             cntr = 0
             for line in cli_output.splitlines():
@@ -311,7 +308,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 if ip_addr:
                     command = f"show ip bgp vpnv4 vrf {VRF} neighbor {ip_addr.group(1)} advertised-routes"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -325,7 +322,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
                     command = f"show ip bgp vpnv4 vrf {VRF} neighbor {ip_addr.group(1)} received-routes"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -339,7 +336,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
 
     elif best_match == "cisco_nxos":
-        cli_output = device.send_command("show vrf", cmd_verify=False)
+        cli_output = device.send_command("show vrf")
         VRF_names = []
         # Find column heading line & then parse VRF names in lines below
         cntr = 0
@@ -353,9 +350,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 VRF_names.append(columns[0])
 
         for VRF in VRF_names:
-            cli_output = device.send_command(
-                f"show ip bgp summary vrf {VRF}", cmd_verify=False
-            )
+            cli_output = device.send_command(f"show ip bgp summary vrf {VRF}")
             # Find column heading line & then parse BGP peers in lines below
             cntr = 0
             for line in cli_output.splitlines():
@@ -367,7 +362,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 if ip_addr:
                     command = f"show ip bgp neighbor {ip_addr.group(1)} advertised-routes vrf {VRF}"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -381,7 +376,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
                     command = f"show ip bgp neighbor {ip_addr.group(1)} received-routes vrf {VRF}"
                     cli_output2 = f"{command}\n"
-                    cli_output2 += device.send_command(command, cmd_verify=False)
+                    cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
                         / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -395,7 +390,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                         )
 
     elif best_match == "juniper" or best_match == "juniper_junos":
-        cli_output = device.send_command(f"show bgp summary", cmd_verify=False)
+        cli_output = device.send_command(f"show bgp summary")
         # Find column heading line & then parse BGP peers in lines below
         cntr = 0
         for line in cli_output.splitlines():
@@ -407,7 +402,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
             if ip_addr:
                 command = f"show route advertising-protocol bgp {ip_addr.group(1)}"
                 cli_output2 = f"{command}\n"
-                cli_output2 += device.send_command(command, cmd_verify=False)
+                cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
                     / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
@@ -419,7 +414,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     checkout_messages += f"Error: Unable to write file {file_path}.\n"
                 command = f"show route receive-protocol bgp {ip_addr.group(1)}"
                 cli_output2 = f"{command}\n"
-                cli_output2 += device.send_command(command, cmd_verify=False)
+                cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
                     / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
