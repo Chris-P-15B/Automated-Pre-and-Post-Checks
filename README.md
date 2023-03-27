@@ -7,7 +7,7 @@ Each SSH session to a device is handled in a separate thread, for reduced execut
 
 Contains modified version of diff2HtmlCompare, (c) 2016 Alex Goodman, https://github.com/wagoodman/diff2HtmlCompare & used under the MIT licence.
 
-Contains modified version of NetMiko's ssh_autodetect.py, (c) 2016 - 2023 Kirk Byers, https://github.com/ktbyers/netmiko & used under the MIT licence.
+Contains modified version of NetMiko's ssh_autodetect.py, (c) 2016 - 2023 Kirk Byers et al. https://github.com/ktbyers/netmiko & used under the MIT licence.
 
 Uses code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php & used under the zlib/libpng licence.
 
@@ -24,7 +24,7 @@ Caveats:
 
 
 Version History:
-* v1.1 - Updated NetMiko Exceptions, code tidying & added NetMiko auto-detection for Aruba CX devices.
+* v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 * v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a separate thread per device.
 * v0.4 - Improvements to settings & checkouts validation, added optional proxy server support.
 * v0.3 - Integrated diff2HtmlCompare for prettier output & now storing outputs in a zip file.
@@ -110,7 +110,7 @@ Example checkout definition:
 Command line parameters, for those with spaces enclose the parameter in "":
 
 * change control ID - identifier for the change control the checkouts are for, must form a valid Linux filename
-* password - for the account specified in settings.json
+* password - base64 encoded password for the account specified in settings.json
 * space delimited list of hostnames - must be resolvable via DNS or an IPv4 address
 
 For example:

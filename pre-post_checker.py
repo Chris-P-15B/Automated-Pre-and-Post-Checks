@@ -8,7 +8,7 @@ Automated pre & post checks with platform specific code paths, additional role c
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
-v1.1 - Updated NetMiko Exceptions, code tidying & added NetMiko auto-detection for Aruba CX devices.
+v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a
 separate thread per device.
 v0.4 - Improvements to settings & checkouts validation, added optional proxy server support.
@@ -25,6 +25,7 @@ import json
 import smtplib
 import socks
 import ssl
+import base64
 import SNMP_ping_sweep
 import diff2HtmlCompare
 import argparse
@@ -557,7 +558,7 @@ def main():
     """Parse command line arguments, load checkout definitions & determine if pre or post checks."""
     if len(sys.argv) <= 3:
         print(
-            f"Usage: {sys.argv[0]} [change control ID] [password] [space delimited list of hostnames]"
+            f"Usage: {sys.argv[0]} [change control ID] [base64 encoded password] [space delimited list of hostnames]"
         )
         sys.exit(1)
 
@@ -662,7 +663,7 @@ def main():
                 settings,
                 checkouts,
                 target_device,
-                sys.argv[2],
+                base64.b64decode(sys.argv[2]).decode("utf-8"),
                 checkouts_output,
             ),
         )
