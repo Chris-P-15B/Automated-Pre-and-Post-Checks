@@ -8,6 +8,7 @@ Automated pre & post checks with platform specific code paths, additional role c
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
+v1.2 - Bug fix SNMP ping sweep.
 v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a
 separate thread per device.

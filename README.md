@@ -24,6 +24,7 @@ Caveats:
 
 
 Version History:
+* v1.2 - Bug fix SNMP ping sweep.
 * v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 * v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a separate thread per device.
 * v0.4 - Improvements to settings & checkouts validation, added optional proxy server support.

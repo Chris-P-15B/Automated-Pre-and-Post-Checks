@@ -148,7 +148,7 @@ def ping_sweep(target_device, community):
 
     for r in variables:
         for name, val in r:
-            oid = name.prettyPrint()
+            oid = name if isinstance(name, str) else name.prettyPrint()
             value = val.prettyPrint()
             if (
                 oid == "No more variables left in this MIB View"
