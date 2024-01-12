@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2022 - 2023, Chris Perkins
+Copyright (c) 2022 - 2024, Chris Perkins
 Licence: BSD 3-Clause
 
 Automated pre & post checks with platform specific code paths, additional role checks based on partial
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
+v1.2.1 - Added forcing pre-check rerun.
 v1.2 - Bug fix SNMP ping sweep.
 v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a
@@ -57,7 +58,7 @@ def guess_device_type(remote_device):
     try:
         guesser = SSHDetect(**remote_device)
         best_match = guesser.autodetect()
-    except (NetMikoAuthenticationException):
+    except NetMikoAuthenticationException:
         print(
             f"Error: Failed to execute CLI on {remote_device['host']} due to incorrect credentials."
         )
@@ -112,7 +113,7 @@ def perform_checkouts(
             fast_cli=False,
             global_cmd_verify=False,
         )
-    except (NetMikoAuthenticationException):
+    except NetMikoAuthenticationException:
         checkout_messages += f"Error: Failed to execute CLI on {target_device} due to incorrect credentials.\n"
         checkouts_output.append(checkout_messages)
         return
@@ -559,13 +560,19 @@ def main():
     """Parse command line arguments, load checkout definitions & determine if pre or post checks."""
     if len(sys.argv) <= 3:
         print(
-            f"Usage: {sys.argv[0]} [change control ID] [base64 encoded password] [space delimited list of hostnames]"
+            f"Usage: {sys.argv[0]} [change control ID] [base64 encoded password] [space delimited list of hostnames]\n"
+            "To force pre-checks to be rerun add --force-precheck to the list of hostnames."
         )
         sys.exit(1)
 
     # Sanity check parameters
     device_list = []
+    force_precheck = False
     for i in sys.argv[3:]:
+        if i.upper() == "--FORCE-PRECHECK":
+            force_precheck = True
+            continue
+
         hostname = re.search(r"^[\w\-\.]+$", i)
         if not hostname:
             print(f"Error: Invalid hostname {i}.")
@@ -646,11 +653,20 @@ def main():
 
     # Does the directory for storing checkouts exist? If not create it
     dir_path = Path(settings["temp_path"]) / sys.argv[1]
-    if os.path.exists(dir_path):
-        pre_check = False
-    else:
-        os.mkdir(dir_path)
-        pre_check = True
+    try:
+        if os.path.exists(dir_path):
+            if force_precheck:
+                shutil.rmtree(dir_path)
+                os.mkdir(dir_path)
+                pre_check = True
+            else:
+                pre_check = False
+        else:
+            os.mkdir(dir_path)
+            pre_check = True
+    except OSError:
+        print(f"Unable to create the prechecks storage directory: {dir_path}")
+        sys.exit(1)
 
     # Run checkouts against each device in a separate thread
     workers = []

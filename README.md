@@ -1,6 +1,6 @@
 # Automated Pre & Post Checks
 
-Copyright (c) 2022 - 2023, Chris Perkins
+Copyright (c) 2022 - 2024, Chris Perkins
 
 Connects via SSH to a specified list of network devices, automatically detects the platform & runs platform specific commands. Features additional role specific checks based on partial hostnames, optional ping sweep (pulls interface IP addresses via SNMP) & VRF aware BGP peer routes check. HTML post checks report with command output diffs is emailed out to specified email address as a zip file attachment.
 Each SSH session to a device is handled in a separate thread, for reduced execution times when running against multiple devices.
@@ -21,9 +21,11 @@ Caveats:
 2. BGP peer check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
 3. SMTP server authentication code path isn't exposed currently.
 4. SNMP v3 isn't supported currently.
+5. SNMP ping sweep doesn't work on Aruba devices.
 
 
 Version History:
+* v1.2.1 - Added forcing pre-check rerun.
 * v1.2 - Bug fix SNMP ping sweep.
 * v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
 * v1.0 - Added VRF aware BGP peer advertised & received routes check. Made checkouts executed in a separate thread per device.
@@ -118,5 +120,7 @@ For example:
 *python pre-post_checker.py 4321 Password123 device1.somewhere.com device2.somewhere.com device3.somewehere.com*
 
 The first run of the tool will create a directory in the temporary files path, named after the change control ID. The output of the pre-checks will be stored as text files in this directory.
+
+If you accidentally specified an incorrect list of hostnames & the pre-checks have been run, you can force the pre-checks to be rerun from scratch by adding --force-precheck to the list of hostnames.
 
 The second run of the tool will store the outputs of the post-checks in this directory, run a diff against the pre & post checks, generate an HTML report & send an email with it attached as a zip file.

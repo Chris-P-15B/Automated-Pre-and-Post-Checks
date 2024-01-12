@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2019 - 2022, Chris Perkins
+Copyright (c) 2019 - 2023, Chris Perkins
 Licence: BSD 3-Clause
 
 Portions of this code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php
