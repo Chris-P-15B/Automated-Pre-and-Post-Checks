@@ -167,7 +167,7 @@ def perform_checkouts(
                 cli_output += "\n".join([f"{ip_addr}" for ip_addr in ip_addr_list])
             file_path = Path(
                 dir_path
-                / f"{target_device}_ping-sweep{'_pre' if pre_check else '_post'}"
+                / f"{target_device}_ping-sweep{'_pre' if pre_check else '_post'}.txt"
             )
             try:
                 with open(file_path, "w") as f:
@@ -179,7 +179,7 @@ def perform_checkouts(
             cli_output += device.send_command(command)
             file_path = Path(
                 dir_path
-                / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
             )
             try:
                 with open(file_path, "w") as f:
@@ -224,7 +224,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -238,7 +238,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -278,7 +278,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
-                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                 )
                 try:
                     with open(file_path, "w") as f:
@@ -290,7 +290,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
-                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                 )
                 try:
                     with open(file_path, "w") as f:
@@ -314,7 +314,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -328,7 +328,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -368,7 +368,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -382,7 +382,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                     cli_output2 += device.send_command(command)
                     file_path = Path(
                         dir_path
-                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                        / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                     )
                     try:
                         with open(file_path, "w") as f:
@@ -408,7 +408,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
-                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                 )
                 try:
                     with open(file_path, "w") as f:
@@ -420,7 +420,7 @@ def check_bgp_peers(pre_check, dir_path, best_match, target_device, device):
                 cli_output2 += device.send_command(command)
                 file_path = Path(
                     dir_path
-                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}"
+                    / f"{target_device}_{command.replace(' ', '-').replace('|', '-')}{'_pre' if pre_check else '_post'}.txt"
                 )
                 try:
                     with open(file_path, "w") as f:
@@ -490,7 +490,7 @@ def generate_report(cc_id, dir_path, device_list, settings):
     # Iterate through files containing outputs for each device & create dictionary of details
     for target_device in device_list:
         diff_output_dict[target_device] = {}
-        for file_path1 in dir_path.glob(f"{target_device}_*_pre"):
+        for file_path1 in dir_path.glob(f"{target_device}_*_pre.txt"):
             if not file_path1.is_file():
                 continue
             # This code is ugly :(
