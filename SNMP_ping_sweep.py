@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2019 - 2023, Chris Perkins
+Copyright (c) 2019 - 2024, Chris Perkins
 Licence: BSD 3-Clause
 
 Portions of this code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php
 & used under the zlib/libpng licence.
 IP address sorting courtesy of https://www.python4networkengineers.com/posts/how_to_sort_ip_addresses_with_python/
 
+The S in SNMP standing for "Simple" is a lie!
+
 To Do:
 Add IPv6 support.
 """
 
+import pkgutil
 import time
 import socket
 import ipaddress
@@ -22,51 +25,14 @@ import subprocess
 from pysnmp.entity.rfc3413.oneliner import cmdgen
 
 
-# Subnet mask -> CIDR prefix length lookup table
-subnet_masks = {
-    "128.0.0.0": "1",
-    "192.0.0.0": "2",
-    "224.0.0.0": "3",
-    "240.0.0.0": "4",
-    "248.0.0.0": "5",
-    "252.0.0.0": "6",
-    "254.0.0.0": "7",
-    "255.0.0.0": "8",
-    "255.128.0.0": "9",
-    "255.192.0.0": "10",
-    "255.224.0.0": "11",
-    "255.240.0.0": "12",
-    "255.248.0.0": "13",
-    "255.252.0.0": "14",
-    "255.254.0.0": "15",
-    "255.255.0.0": "16",
-    "255.255.128.0": "17",
-    "255.255.192.0": "18",
-    "255.255.224.0": "19",
-    "255.255.240.0": "20",
-    "255.255.248.0": "21",
-    "255.255.252.0": "22",
-    "255.255.254.0": "23",
-    "255.255.255.0": "24",
-    "255.255.255.128": "25",
-    "255.255.255.192": "26",
-    "255.255.255.224": "27",
-    "255.255.255.240": "28",
-    "255.255.255.248": "29",
-    "255.255.255.252": "30",
-    "255.255.255.254": "31",
-    "255.255.255.255": "32",
-}
-
-
-def mask_to_prefix(mask):
-    """Subnet mask -> prefix length, returns 0 if invalid/zero"""
-    return subnet_masks.get(mask, 0)
-
-
 def extract_ip_from_oid(oid):
     """Given a dotted OID string, this extracts an IPv4 address from the end of it (i.e. the last four decimals)"""
     return ".".join(oid.split(".")[-4:])
+
+
+def extract_mask_from_value(value):
+    """Given a dotted value string, this extracts a subnet mask from the end of it (i.e. decimals)"""
+    return int(value.split(".")[-1:][0])
 
 
 def ping(server="example.com", count=1, wait_sec=1):
@@ -95,7 +61,7 @@ def ping_ip(ip_addr, ip_host_dict):
     """Ping an IP address after a small random delay to avoid rate limiting or saturation of ICMP traffic,
     also reverse DNS lookup on the IP address & store results in a dictionary"""
     time.sleep(random.random() * 1.2)
-    if ping(ip_addr) != None:
+    if ping(ip_addr) is not None:
         try:
             reverse_dns = socket.gethostbyaddr(ip_addr)
         except socket.herror:
@@ -121,9 +87,9 @@ def ping_sweep(target_device, community):
         0,
         25,
         # Interface index <-> IP address
-        "1.3.6.1.2.1.4.20.1.2",
+        "1.3.6.1.2.1.4.34",
         # Interface IP <-> subnet mask
-        "1.3.6.1.2.1.4.20.1.3",
+        "1.3.6.1.2.1.4.32",
         # Interface index <-> name (MIB extensions)
         "1.3.6.1.2.1.31.1.1.1.1",
         lookupMib=False,
@@ -143,7 +109,8 @@ def ping_sweep(target_device, community):
     # Extract the data we need from the response
     if_index_to_name = {}
     if_index_to_address = {}
-    if_ip_to_subnet_mask = {}
+    if_index_to_subnet_mask = {}
+    if_unicast_addresses = []
     longest = 0
 
     for r in variables:
@@ -160,19 +127,30 @@ def ping_sweep(target_device, community):
             if oid[0:23] == "1.3.6.1.2.1.31.1.1.1.1.":
                 if_index_to_name[int(oid[oid.rindex(".") + 1 :])] = value
                 longest = max(longest, len(value))
-            # 1-based index <-> interface ip address
-            if oid[0:20] == "1.3.6.1.2.1.4.20.1.2":
-                if_index_to_address[int(value)] = extract_ip_from_oid(oid)
-            # IP address <-> subnet mask
-            if oid[0:20] == "1.3.6.1.2.1.4.20.1.3":
-                if_ip_to_subnet_mask[extract_ip_from_oid(oid)] = value
+            # Confirm unicast IP address
+            if oid[0:20] == "1.3.6.1.2.1.4.34.1.4" and value == "1":
+                if_unicast_addresses.append(extract_ip_from_oid(oid))
+
+            # 1-based index <-> interface IPv4 address
+            if oid[0:16] == "1.3.6.1.2.1.4.34" and value[0:16] == "1.3.6.1.2.1.4.32":
+                if value.split(".")[11] == "1":
+                    if extract_ip_from_oid(oid) in if_unicast_addresses:
+                        if_index_to_address[int(value.split(".")[10])] = (
+                            extract_ip_from_oid(oid)
+                        )
+                # IPv4 address <-> subnet mask
+                if value.split(".")[11] == "1":
+                    if_index_to_subnet_mask[int(value.split(".")[10])] = (
+                        extract_mask_from_value(value)
+                    )
 
     if len(if_index_to_name) == 0:
         print(
             f"Error: {target_device} could not get the interface table, dumping raw data instead:"
         )
+        print(if_index_to_name)
         print(if_index_to_address)
-        print(if_ip_to_subnet_mask)
+        print(if_index_to_subnet_mask)
         return
 
     ip_addr_list = []
@@ -183,8 +161,8 @@ def ping_sweep(target_device, community):
 
         ip = if_index_to_address[i]
 
-        if ip in if_ip_to_subnet_mask:
-            mask = "/" + str(mask_to_prefix(if_ip_to_subnet_mask[ip]))
+        if if_index_to_subnet_mask.get(i, None):
+            mask = "/" + str(if_index_to_subnet_mask[i])
         else:
             mask = " (unknown subnet mask)"
 

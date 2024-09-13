@@ -8,6 +8,8 @@ Automated pre & post checks with platform specific code paths, additional role c
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
+v1.3 - SNMP ping sweep moved from "1.3.6.1.2.1.4.20.1.2" & "1.3.6.1.2.1.4.20.1.3" OIDs to "1.3.6.1.2.1.4.32" &
+"1.3.6.1.2.1.4.34", for wider vendor support & future IPv6 support.
 v1.2.1 - Added forcing pre-check rerun.
 v1.2 - Bug fix SNMP ping sweep.
 v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
