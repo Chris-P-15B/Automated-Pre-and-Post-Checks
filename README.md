@@ -25,7 +25,7 @@ Caveats:
 
 
 Version History:
-* v1.3 - SNMP ping sweep moved from "1.3.6.1.2.1.4.20.1.2" & "1.3.6.1.2.1.4.20.1.3" OIDs to "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34", for wider vendor support & future IPv6 support.
+* v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 * v1.2.1 - Added forcing pre-check rerun.
 * v1.2 - Bug fix SNMP ping sweep.
 * v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
