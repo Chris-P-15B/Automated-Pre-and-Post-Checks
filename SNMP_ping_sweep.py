@@ -7,21 +7,22 @@ Licence: BSD 3-Clause
 Portions of this code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php
 & used under the zlib/libpng licence.
 IP address sorting courtesy of https://www.python4networkengineers.com/posts/how_to_sort_ip_addresses_with_python/
+Thanks to http://www.net-snmp.org/docs/mibs/ip.html for explaining the OIDs
 
 The S in SNMP standing for "Simple" is a lie!
 
 Now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
+Reworked to use PySNNP v7.1+.
 """
 
-import pkgutil
 import time
 import socket
 import ipaddress
 import random
 import threading
-import pysnmp
 import subprocess
-from pysnmp.entity.rfc3413.oneliner import cmdgen
+import asyncio
+from pysnmp.hlapi.v1arch.asyncio import *
 
 
 def extract_ip_from_oid(oid, ipv4=True):
@@ -37,7 +38,7 @@ def extract_ip_from_oid(oid, ipv4=True):
 
 def extract_mask_from_value(value):
     """Given a dotted value string, this extracts a subnet mask from the end of it"""
-    return int(value.split(".")[-1:][0])
+    return value.split(".")[-1:][0]
 
 
 def ping(server="example.com", count=1, wait_sec=1):
@@ -75,125 +76,164 @@ def ping_ip(ip_addr, ip_host_dict):
             ip_host_dict[ip_addr] = reverse_dns[0]
 
 
-def ping_sweep(target_device, community):
+async def ping_sweep(target_device, community):
     """Pull interface IP addressing via SNMP & ping connected networks"""
-    command_generator = cmdgen.CommandGenerator()
-    authentication = cmdgen.CommunityData(community)
-    try:
-        target = cmdgen.UdpTransportTarget((target_device, 161))
-    except pysnmp.error.PySnmpError as e:
-        print(f"Error: {target_device} - {e}")
-        return
-
-    # Send a GETBULK request for the OIDs we want
-    snmp_engine_error, error_status, error_index, variables = command_generator.bulkCmd(
-        authentication,
-        target,
-        0,
-        25,
-        # Interface index <-> name (MIB extensions)
-        "1.3.6.1.2.1.31.1.1.1.1",
-        lookupMib=False,
-        lexicographicMode=False,
-    )
-
-    if snmp_engine_error:
-        print(f"Error: {target_device} - {snmp_engine_error}")
-        return
-
-    if error_status:
-        print(
-            f"Error: {target_device} - {error_status.prettyPrint()} at {error_index and variables[int(error_index) - 1][0] or '?'}"
-        )
-        return
-
-    # Extract the interface indexes & names we need from the response
+    snmpDispatcher = SnmpDispatcher()
     if_index_to_name = {}
     if_index_to_ipv4_address = {}
     if_index_to_ipv6_address = {}
     longest = 0
-
-    for r in variables:
-        for name, val in r:
-            oid = name if isinstance(name, str) else name.prettyPrint()
-            value = val.prettyPrint()
-            if (
-                oid == "No more variables left in this MIB View"
-                or value == "No more variables left in this MIB View"
-            ):
-                continue
-
-            # 1-based index <-> interface name
-            if oid[0:23] == "1.3.6.1.2.1.31.1.1.1.1.":
-                if_index = oid[oid.rindex(".") + 1 :]
-                if_index_to_name[if_index] = value
-                longest = max(longest, len(value))
-
-                if if_index_to_ipv4_address.get(if_index, True):
-                    if_index_to_ipv4_address[if_index] = []
-                if if_index_to_ipv6_address.get(if_index, True):
-                    if_index_to_ipv6_address[if_index] = []
-
-    # Send a GETBULK request for the OIDs we want
-    snmp_engine_error, error_status, error_index, variables = command_generator.bulkCmd(
-        authentication,
-        target,
-        0,
-        25,
-        # Interface index <-> IP address
-        "1.3.6.1.2.1.4.34",
-        # Interface IP <-> subnet mask
-        "1.3.6.1.2.1.4.32",
-        lookupMib=False,
-        lexicographicMode=False,
-    )
-
-    if snmp_engine_error:
-        print(f"Error: {target_device} - {snmp_engine_error}")
-        return
-
-    if error_status:
-        print(
-            f"Error: {target_device} - {error_status.prettyPrint()} at {error_index and variables[int(error_index) - 1][0] or '?'}"
-        )
-        return
-
-    # Extract the IP addressing from the response
     if_unicast_addresses = []
 
-    for r in variables:
-        for name, val in r:
-            oid = name if isinstance(name, str) else name.prettyPrint()
-            value = val.prettyPrint()
-            if (
-                oid == "No more variables left in this MIB View"
-                or value == "No more variables left in this MIB View"
-            ):
-                continue
+    searching = True
+    # Interface index <-> name (MIB extensions)
+    var_binds = [ObjectType(ObjectIdentity("1.3.6.1.2.1.31.1.1.1.1"))]
+    while searching:
+        error_indication, error_status, error_index, var_bind_table = await bulk_cmd(
+            snmpDispatcher,
+            CommunityData(community, mpModel=1),
+            await UdpTransportTarget.create((target_device, 161)),
+            0,
+            50,
+            *var_binds,
+        )
 
-            # Confirm unicast IP addresses
-            if oid[0:20] == "1.3.6.1.2.1.4.34.1.4" and value == "1":
-                if oid[21] in ("1", "3"):
-                    if_unicast_addresses.append(extract_ip_from_oid(oid, True))
-                if oid[21] in ("2", "4"):
-                    if_unicast_addresses.append(extract_ip_from_oid(oid, False))
+        if error_indication:
+            print(f"Error: {target_device} - {error_indication}")
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
 
-            # 1-based index <-> interface IP address
-            if (
-                oid[0:20] == "1.3.6.1.2.1.4.34.1.5"
-                and value[0:16] == "1.3.6.1.2.1.4.32"
-            ):
-                ip_addr = ""
-                # IPv4
-                if oid[21] in ("1", "3"):
-                    if extract_ip_from_oid(oid, True) in if_unicast_addresses:
-                        ip_addr = f"{extract_ip_from_oid(oid, True)}/{extract_mask_from_value(value)}"
-                        if_index_to_ipv4_address[value.split(".")[10]].append(ip_addr)
-                # IPv6
-                if oid[21] in ("2", "4"):
-                    if extract_ip_from_oid(oid, False) in if_unicast_addresses:
-                        ip_addr = f"{extract_ip_from_oid(oid, False)}/{extract_mask_from_value(value)}"
-                        if_index_to_ipv6_address[value.split(".")[10]].append(ip_addr)
+        elif error_status:
+            print(
+                f"Error: {target_device} - {error_status.prettyPrint()} at {error_index and var_bind_table[int(error_index) - 1][0] or '?'}"
+            )
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
+
+        else:
+            # Extract the interface indexes & names we need from the response
+            for var_bind in var_bind_table:
+                pretty_printed = "=".join([x.prettyPrint() for x in var_bind])
+                oid = pretty_printed.split("=")[0]
+                value = pretty_printed.split("=")[1]
+                # 1-based index <-> interface name
+                if oid[17:29] == ".31.1.1.1.1.":
+                    if_index = oid[oid.rindex(".") + 1 :]
+                    if_index_to_name[if_index] = value
+                    longest = max(longest, len(value))
+
+                    if if_index_to_ipv4_address.get(if_index, True):
+                        if_index_to_ipv4_address[if_index] = []
+                    if if_index_to_ipv6_address.get(if_index, True):
+                        if_index_to_ipv6_address[if_index] = []
+                else:
+                    searching = False
+                    break
+
+        var_binds = var_bind_table
+        if is_end_of_mib(var_binds):
+            break
+
+    searching = True
+    # Interface index <-> IP address & Interface IP <-> subnet mask
+    var_binds = [ObjectType(ObjectIdentity("1.3.6.1.2.1.4.34.1.4"))]
+    while searching:
+        error_indication, error_status, error_index, var_bind_table = await bulk_cmd(
+            snmpDispatcher,
+            CommunityData(community, mpModel=1),
+            await UdpTransportTarget.create((target_device, 161)),
+            0,
+            50,
+            *var_binds,
+        )
+
+        if error_indication:
+            print(f"Error: {target_device} - {error_indication}")
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
+
+        elif error_status:
+            print(
+                f"Error: {target_device} - {error_status.prettyPrint()} at {error_index and var_bind_table[int(error_index) - 1][0] or '?'}"
+            )
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
+
+        else:
+            # Extract the IP addressing from the response
+            for var_bind in var_bind_table:
+                pretty_printed = "=".join([x.prettyPrint() for x in var_bind])
+                oid = pretty_printed.split("=")[0]
+                value = pretty_printed.split("=")[1]
+                # Confirm unicast IP addresses
+                if oid[17:27] == ".4.34.1.4." and value == "1":
+                    if oid[27:29] in ("1.", "3."):
+                        if_unicast_addresses.append(extract_ip_from_oid(oid, True))
+                    if oid[27:29] in ("2.", "4."):
+                        if_unicast_addresses.append(extract_ip_from_oid(oid, False))
+                else:
+                    searching = False
+                    break
+
+        var_binds = var_bind_table
+        if is_end_of_mib(var_binds):
+            break
+
+    searching = True
+    # Interface index <-> IP address & Interface IP <-> subnet mask
+    var_binds = [ObjectType(ObjectIdentity("1.3.6.1.2.1.4.34.1.5"))]
+    while searching:
+        error_indication, error_status, error_index, var_bind_table = await bulk_cmd(
+            snmpDispatcher,
+            CommunityData(community, mpModel=1),
+            await UdpTransportTarget.create((target_device, 161)),
+            0,
+            50,
+            *var_binds,
+        )
+
+        if error_indication:
+            print(f"Error: {target_device} - {error_indication}")
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
+
+        elif error_status:
+            print(
+                f"Error: {target_device} - {error_status.prettyPrint()} at {error_index and var_bind_table[int(error_index) - 1][0] or '?'}"
+            )
+            snmpDispatcher.transport_dispatcher.close_dispatcher()
+            return
+
+        else:
+            # Extract the IP addressing from the response
+            for var_bind in var_bind_table:
+                pretty_printed = "=".join([x.prettyPrint() for x in var_bind])
+                oid = pretty_printed.split("=")[0]
+                value = pretty_printed.split("=")[1]
+                # 1-based index <-> interface IP address
+                if oid[17:27] == ".4.34.1.5." and value[0:16] == "1.3.6.1.2.1.4.32":
+                    ip_addr = ""
+                    # IPv4
+                    if oid[27:29] in ("1.", "3."):
+                        if extract_ip_from_oid(oid, True) in if_unicast_addresses:
+                            ip_addr = f"{extract_ip_from_oid(oid, True)}/{extract_mask_from_value(value)}"
+                            if_index_to_ipv4_address[value.split(".")[10]].append(
+                                ip_addr
+                            )
+                    # IPv6
+                    if oid[27:29] in ("2.", "4."):
+                        if extract_ip_from_oid(oid, False) in if_unicast_addresses:
+                            ip_addr = f"{extract_ip_from_oid(oid, False)}/{extract_mask_from_value(value)}"
+                            if_index_to_ipv6_address[value.split(".")[10]].append(
+                                ip_addr
+                            )
+                else:
+                    searching = False
+                    break
+
+        var_binds = var_bind_table
+        if is_end_of_mib(var_binds):
+            break
 
     if len(if_index_to_name) == 0:
         print(
@@ -202,6 +242,7 @@ def ping_sweep(target_device, community):
         print(if_index_to_name)
         print(if_index_to_ipv4_address)
         print(if_index_to_ipv6_address)
+        snmpDispatcher.transport_dispatcher.close_dispatcher()
         return
 
     ip_addr_list = []
@@ -224,7 +265,7 @@ def ping_sweep(target_device, community):
                     for worker in workers:
                         worker.join()
 
-                    # Display sorted list of IPv4 addresses & hostnames that responded
+                    # Create sorted list of IPv4 addresses & hostnames that responded
                     for ip_addr in sorted(
                         ip_and_host_dict.keys(),
                         key=lambda ip_addr: (
@@ -264,7 +305,7 @@ def ping_sweep(target_device, community):
                     for worker in workers:
                         worker.join()
 
-                    # Display sorted list of IPv6 addresses & hostnames that responded
+                    # Create sorted list of IPv6 addresses & hostnames that responded
                     for ip_addr in sorted(
                         ip_and_host_dict.keys(),
                         key=lambda ip_addr: (
@@ -282,4 +323,5 @@ def ping_sweep(target_device, community):
                             f"{ip_addr} {ip_and_host_dict[str(ip_addr)]}"
                         )
 
+    snmpDispatcher.transport_dispatcher.close_dispatcher()
     return ip_addr_list

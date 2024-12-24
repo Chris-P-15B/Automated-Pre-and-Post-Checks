@@ -8,8 +8,8 @@ Automated pre & post checks with platform specific code paths, additional role c
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
-v1.3 - SNMP ping sweep moved from "1.3.6.1.2.1.4.20.1.2" & "1.3.6.1.2.1.4.20.1.3" OIDs to "1.3.6.1.2.1.4.32" &
-"1.3.6.1.2.1.4.34", for wider vendor support & future IPv6 support.
+v1.3.1 - Reworked to use PySNNP v7.1+.
+v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 v1.2.1 - Added forcing pre-check rerun.
 v1.2 - Bug fix SNMP ping sweep.
 v1.1 - Updated NetMiko Exceptions, code tidying, switched to base64 password & added NetMiko auto-detection for Aruba CX devices.
@@ -35,6 +35,7 @@ import diff2HtmlCompare
 import argparse
 import shutil
 import threading
+import asyncio
 from zipfile import ZipFile, ZIP_DEFLATED
 from pathlib import Path
 from netmiko.exceptions import (
@@ -161,8 +162,10 @@ def perform_checkouts(
                 pre_check, dir_path, best_match, target_device, device
             )
         elif command == "PING_SWEEP":
-            ip_addr_list = SNMP_ping_sweep.ping_sweep(
-                target_device, checkouts[best_match]["community"]
+            ip_addr_list = asyncio.run(
+                SNMP_ping_sweep.ping_sweep(
+                    target_device, checkouts[best_match]["community"]
+                )
             )
             cli_output = "Ping Sweep\n"
             if ip_addr_list:

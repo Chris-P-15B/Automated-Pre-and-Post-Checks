@@ -21,10 +21,10 @@ Caveats:
 2. BGP peer check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
 3. SMTP server authentication code path isn't exposed currently.
 4. SNMP v3 isn't supported currently.
-5. SNMP ping sweep doesn't work on Aruba devices.
 
 
 Version History:
+* v1.3.1 - Reworked to use PySNNP v7.1+.
 * v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 * v1.2.1 - Added forcing pre-check rerun.
 * v1.2 - Bug fix SNMP ping sweep.
@@ -36,8 +36,9 @@ Version History:
 * v0.1 - Initial development release.
 
 ## Pre-Requisites
-* Python 3.7+
+* Python 3.9+
 * NetMiko 4.1+
+* PySNMP 7.1+
 * Runs on Linux
 
 ## Installation
