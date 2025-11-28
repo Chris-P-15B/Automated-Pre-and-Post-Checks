@@ -273,7 +273,7 @@ class CodeDiff(object):
     def __init__(self, fromfile, tofile, fromtxt=None, totxt=None, name=None):
         self.filename = name
         self.fromfile = fromfile
-        if fromtxt == None:
+        if fromtxt is None:
             try:
                 with io.open(fromfile) as f:
                     self.fromlines = f.readlines()
@@ -286,7 +286,7 @@ class CodeDiff(object):
         self.leftcode = "".join(self.fromlines)
 
         self.tofile = tofile
-        if totxt == None:
+        if totxt is None:
             try:
                 with io.open(tofile) as f:
                     self.tolines = f.readlines()
@@ -344,7 +344,7 @@ class CodeDiff(object):
         )
 
         codeContents = []
-        for (code, isLeft, filename) in fields:
+        for code, isLeft, filename in fields:
 
             inst = DiffHtmlFormatter(
                 isLeft,

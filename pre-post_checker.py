@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2022 - 2024, Chris Perkins
+Copyright (c) 2022 - 2025, Chris Perkins
 Licence: BSD 3-Clause
 
 Automated pre & post checks with platform specific code paths, additional role checks based on partial
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
+v1.3.2 - Tidying the report by sorting checkouts & embedding CSS into HTML file.
 v1.3.1 - Reworked to use PySNNP v7.1+.
 v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 v1.2.1 - Added forcing pre-check rerun.
@@ -495,7 +496,7 @@ def generate_report(cc_id, dir_path, device_list, settings):
     # Iterate through files containing outputs for each device & create dictionary of details
     for target_device in device_list:
         diff_output_dict[target_device] = {}
-        for file_path1 in dir_path.glob(f"{target_device}_*_pre.txt"):
+        for file_path1 in sorted(dir_path.glob(f"{target_device}_*_pre.txt")):
             if not file_path1.is_file():
                 continue
             # This code is ugly :(
@@ -534,10 +535,6 @@ def generate_report(cc_id, dir_path, device_list, settings):
     except OSError:
         print(f"Error: Unable to write file {file_path}.")
         sys.exit(1)
-    try:
-        shutil.copytree(Path(BASE_PATH) / "deps", dir_path / "deps", dirs_exist_ok=True)
-    except OSError:
-        print(f"Error: Unable to copy files to {dir_path / 'deps'}.")
 
     # Create a zip file from the checkouts files
     file_path = Path(dir_path / f"CC_{cc_id}.zip")

@@ -1,97 +1,680 @@
 <html class="no-js">
+
 <head>
-<title>Checkouts Report for Change Control #{{cc_id}}</title>
-<meta charset="utf-8">
-<meta name="description" content="">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="stylesheet" href="./deps/reset.css" type="text/css">
-<link rel="stylesheet" href="./deps/diff.css" type="text/css">
-<link class="syntaxdef" rel="stylesheet" href="./deps/codeformats/vs.css" type="text/css">
+  <title>Checkouts Report for Change Control #{{cc_id}}</title>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <style>
+    html,
+    body,
+    div,
+    span,
+    applet,
+    object,
+    iframe,
+    p,
+    blockquote,
+    pre,
+    a,
+    abbr,
+    acronym,
+    address,
+    big,
+    cite,
+    code,
+    del,
+    dfn,
+    em,
+    img,
+    ins,
+    kbd,
+    q,
+    s,
+    samp,
+    small,
+    strike,
+    strong,
+    sub,
+    sup,
+    tt,
+    var,
+    b,
+    u,
+    i,
+    center,
+    dl,
+    dt,
+    dd,
+    fieldset,
+    form,
+    label,
+    legend,
+    table,
+    caption,
+    tbody,
+    tfoot,
+    thead,
+    tr,
+    th,
+    td,
+    article,
+    aside,
+    canvas,
+    details,
+    embed,
+    figure,
+    figcaption,
+    footer,
+    header,
+    hgroup,
+    menu,
+    nav,
+    output,
+    ruby,
+    section,
+    summary,
+    time,
+    mark,
+    audio,
+    video {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 100%%;
+      font: inherit;
+      vertical-align: baseline;
+    }
+
+    /* HTML5 display-role reset for older browsers */
+    article,
+    aside,
+    details,
+    figcaption,
+    figure,
+    footer,
+    header,
+    hgroup,
+    menu,
+    nav,
+    section {
+      display: block;
+    }
+
+    body {
+      line-height: 1;
+    }
+
+    blockquote,
+    q {
+      quotes: none;
+    }
+
+    blockquote:before,
+    blockquote:after,
+    q:before,
+    q:after {
+      content: '';
+      content: none;
+    }
+
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+  </style>
+  <style>
+    body {
+      font-size: 100%;
+      font-family: monospace;
+    }
+
+    .left-inner-shadow {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-inner-shadow:before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      width: 10px;
+      top: 5%;
+      height: 90%;
+      left: -10px;
+      border-radius: 5px / 100px;
+      box-shadow: 0 0 13px rgba(0, 0, 0, 0.5);
+    }
+
+    .divider-outside-bottom {
+      box-shadow: 0px 10px 5px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    /*
+These styles are used to modify the containing area is placed/displayed.
+*/
+    .printmargin {
+      display: block;
+      line-height: 0;
+      height: 0;
+      overflow: hidden;
+      margin: 0 0 0 35px;
+      color: transparent;
+      border: 0;
+    }
+
+    .printmargin:after {
+      content: "";
+      display: inline-block;
+      position: absolute;
+      z-index: 1;
+      top: 47px;
+      bottom: 0;
+      border-right: 1px dashed #777;
+    }
+
+    #topbar {
+      font-family: calibri, "Trebuchet MS", Helvetica, sans-serif;
+      background-color: #555;
+      border-bottom: 0px solid #999;
+      padding: 0;
+      position: fixed;
+      top: 0;
+      height: 30px;
+      width: 100%;
+      z-index: 100;
+    }
+
+    #filetitle {
+      display: inline-block;
+      font-weight: bold;
+      color: #eee;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      vertical-align: top;
+      padding: 0 50px 0 10px;
+      font-size: 16px;
+    }
+
+    /*Toggle buttons*/
+    .switches {
+      float: right;
+    }
+
+    .switch {
+      display: inline-block;
+
+    }
+
+    .toggle {
+      position: absolute;
+      margin-left: -9999px;
+      visibility: hidden;
+    }
+
+    .toggle+label {
+      display: block;
+      position: relative;
+      cursor: pointer;
+      outline: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    input.toggle-yes-no+label {
+      width: 100px;
+      height: 30px;
+    }
+
+    input.toggle-yes-no+label:before,
+    input.toggle-yes-no+label:after {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      color: #fff;
+      font-size: 14px;
+      text-align: center;
+      line-height: 30px;
+    }
+
+    input.toggle-yes-no+label:before {
+      background-color: rgba(180, 180, 180, 0.5);
+      /*#dddddd;*/
+      color: #ccc;
+      content: attr(data-off);
+      -webkit-transition: -webkit-transform 0.5s;
+      -moz-transition: -moz-transform 0.5s;
+      -o-transition: -o-transform 0.5s;
+      transition: transform 0.5s;
+      -webkit-backface-visibility: hidden;
+      -moz-backface-visibility: hidden;
+      -ms-backface-visibility: hidden;
+      -o-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    input.toggle-yes-no+label:after {
+      background-color: rgba(180, 180, 180, 0.3);
+      /*#8ce196;*/
+      color: #FFDD1C;
+      content: attr(data-on);
+      -webkit-transition: -webkit-transform 0.5s;
+      -moz-transition: -moz-transform 0.5s;
+      -o-transition: -o-transform 0.5s;
+      transition: transform 0.5s;
+      -webkit-transform: rotateX(180deg);
+      -moz-transform: rotateX(180deg);
+      -ms-transform: rotateX(180deg);
+      -o-transform: rotateX(180deg);
+      transform: rotateX(180deg);
+      -webkit-backface-visibility: hidden;
+      -moz-backface-visibility: hidden;
+      -ms-backface-visibility: hidden;
+      -o-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    input.toggle-yes-no:checked+label:before {
+      -webkit-transform: rotateX(180deg);
+      -moz-transform: rotateX(180deg);
+      -ms-transform: rotateX(180deg);
+      -o-transform: rotateX(180deg);
+      transform: rotateX(180deg);
+    }
+
+    input.toggle-yes-no:checked+label:after {
+      -webkit-transform: rotateX(0);
+      -moz-transform: rotateX(0);
+      -ms-transform: rotateX(0);
+      -o-transform: rotateX(0);
+      transform: rotateX(0);
+    }
+
+    /*end Toggle buttons*/
+
+
+    div#maincontainer {
+      overflow-x: auto;
+      margin: 20px 0 0 15px;
+    }
+
+    .page-80-width {
+      width: 106em;
+    }
+
+    .page-full-width {
+      width: auto;
+    }
+
+    .codefiletab {
+      font-family: calibri, "Trebuchet MS", Helvetica, sans-serif;
+      background-color: transparent;
+      font-size: 16px;
+      padding: 0 0 10px 5px;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    div#leftcode {
+      width: 50%;
+      overflow-x: auto;
+    }
+
+    div#rightcode {
+      width: 50%;
+      overflow-x: auto;
+    }
+
+    div.codebox {
+      float: left;
+      display: block;
+      padding-top: 20px;
+    }
+
+    div.codebox table {
+      border-right: 1px solid #ddd;
+      border-left: 1px solid #ddd;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    div.linenodiv {
+      text-align: right
+    }
+
+    td.linenos {
+      background: #ddd;
+      padding: 0 5px 0 5px;
+      border-right: 1px solid #ddd;
+      border-left: 1px solid #ddd;
+      border-top: 1px solid #ddd;
+    }
+
+    td.code {
+      width: 80em;
+    }
+
+    span.lineno {
+      background-color: transparent;
+      padding: 0;
+    }
+  </style>
+  <style class="syntaxdef">
+    body .hll {
+      background-color: #ffffcc
+    }
+
+    body {
+      background: #ffffff;
+    }
+
+    body .c {
+      color: #008000
+    }
+
+    /* Comment */
+    body .err {
+      border: 1px solid #FF0000
+    }
+
+    /* Error */
+    body .k {
+      color: #0000ff
+    }
+
+    /* Keyword */
+    body .cm {
+      color: #008000
+    }
+
+    /* Comment.Multiline */
+    body .cp {
+      color: #0000ff
+    }
+
+    /* Comment.Preproc */
+    body .c1 {
+      color: #008000
+    }
+
+    /* Comment.Single */
+    body .cs {
+      color: #008000
+    }
+
+    /* Comment.Special */
+    body .ge {
+      font-style: italic
+    }
+
+    /* Generic.Emph */
+    body .gh {
+      font-weight: bold
+    }
+
+    /* Generic.Heading */
+    body .gp {
+      font-weight: bold
+    }
+
+    /* Generic.Prompt */
+    body .gs {
+      font-weight: bold
+    }
+
+    /* Generic.Strong */
+    body .gu {
+      font-weight: bold
+    }
+
+    /* Generic.Subheading */
+    body .kc {
+      color: #0000ff
+    }
+
+    /* Keyword.Constant */
+    body .kd {
+      color: #0000ff
+    }
+
+    /* Keyword.Declaration */
+    body .kn {
+      color: #0000ff
+    }
+
+    /* Keyword.Namespace */
+    body .kp {
+      color: #0000ff
+    }
+
+    /* Keyword.Pseudo */
+    body .kr {
+      color: #0000ff
+    }
+
+    /* Keyword.Reserved */
+    body .kt {
+      color: #2b91af
+    }
+
+    /* Keyword.Type */
+    body .s {
+      color: #a31515
+    }
+
+    /* Literal.String */
+    body .nc {
+      color: #2b91af
+    }
+
+    /* Name.Class */
+    body .ow {
+      color: #0000ff
+    }
+
+    /* Operator.Word */
+    body .sb {
+      color: #a31515
+    }
+
+    /* Literal.String.Backtick */
+    body .sc {
+      color: #a31515
+    }
+
+    /* Literal.String.Char */
+    body .sd {
+      color: #a31515
+    }
+
+    /* Literal.String.Doc */
+    body .s2 {
+      color: #a31515
+    }
+
+    /* Literal.String.Double */
+    body .se {
+      color: #a31515
+    }
+
+    /* Literal.String.Escape */
+    body .sh {
+      color: #a31515
+    }
+
+    /* Literal.String.Heredoc */
+    body .si {
+      color: #a31515
+    }
+
+    /* Literal.String.Interpol */
+    body .sx {
+      color: #a31515
+    }
+
+    /* Literal.String.Other */
+    body .sr {
+      color: #a31515
+    }
+
+    /* Literal.String.Regex */
+    body .s1 {
+      color: #a31515
+    }
+
+    /* Literal.String.Single */
+    body .ss {
+      color: #a31515
+    }
+
+    /* Literal.String.Symbol
+
+/*
+These styles are used to highlight each diff line.
+Note: for partial like highlight change to "display:block-inline"
+*/
+    span.left_diff_change {
+      background-color: #FFE5B5;
+      display: block
+    }
+
+    span.left_diff_add {
+      background-color: #eeeeee;
+      display: block
+    }
+
+    span.left_diff_del {
+      background-color: #ffdddd;
+      display: block
+    }
+
+    span.lineno_q {
+      display: block;
+    }
+
+    span.right_diff_change {
+      background-color: #FFE5B5;
+      display: block
+    }
+
+    span.right_diff_add {
+      background-color: #ddffdd;
+      display: block
+    }
+
+    span.right_diff_del {
+      background-color: #eeeeee;
+      display: block
+    }
+
+    span.clearbg {
+      background-color: transparent;
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- Top button courtesy of Heather Tovey: https://heathertovey.com/blog/floating-back-to-top-button/ -->
-<style>
-  .back-to-top {
-    background-color: #000000;
-    color: #FFFFFF;
-    opacity: 0;
-    transition: opacity .6s ease-in-out;
-    z-index: 999;
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 50px;
-    height: 50px;
-    box-sizing: border-box;
-    border-radius: 0%;
-  }
-  a.back-to-top {
-    font-weight: 1000;
-    letter-spacing: 2px;
-    font-size: 14px;
-    text-transform: uppercase;
-    text-align: center;
-    line-height: 1.6;
-    padding-left: 2px;
-    padding-top: 14px;
-  }
-  .back-to-top:hover, .back-to-top:focus, .back-to-top:visited {
-    color: #FFFFFF;
-  }
-  .back-to-top.show {
-    opacity: 1;
-  }
-</style>
+  <!-- Top button courtesy of Heather Tovey: https://heathertovey.com/blog/floating-back-to-top-button/ -->
+  <style>
+    .back-to-top {
+      background-color: #000000;
+      color: #FFFFFF;
+      opacity: 0;
+      transition: opacity .6s ease-in-out;
+      z-index: 999;
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 50px;
+      height: 50px;
+      box-sizing: border-box;
+      border-radius: 0%;
+    }
 
-<a href="#toc" id="back-to-top" class="back-to-top" style="display: inline;">Top</a>
+    a.back-to-top {
+      font-weight: 1000;
+      letter-spacing: 2px;
+      font-size: 14px;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.6;
+      padding-left: 2px;
+      padding-top: 14px;
+    }
 
-<script>
-  var link = document.getElementById("back-to-top");
-  var amountScrolled = 250;
-  window.addEventListener('scroll', function(e) {
-      if ( window.pageYOffset > amountScrolled ) {
-          link.classList.add('show');
+    .back-to-top:hover,
+    .back-to-top:focus,
+    .back-to-top:visited {
+      color: #FFFFFF;
+    }
+
+    .back-to-top.show {
+      opacity: 1;
+    }
+  </style>
+
+  <a href="#toc" id="back-to-top" class="back-to-top" style="display: inline;">Top</a>
+
+  <script>
+    var link = document.getElementById("back-to-top");
+    var amountScrolled = 250;
+    window.addEventListener('scroll', function (e) {
+      if (window.pageYOffset > amountScrolled) {
+        link.classList.add('show');
       } else {
-          link.className = 'back-to-top';
+        link.className = 'back-to-top';
       }
-  });
-  link.addEventListener('click', function(e) {
+    });
+    link.addEventListener('click', function (e) {
       e.preventDefault();
       var distance = 0 - window.pageYOffset;
-      var increments = distance/(500/16);
+      var increments = distance / (500 / 16);
       function animateScroll() {
-          window.scrollBy(0, increments);
-          if (window.pageYOffset <= document.body.offsetTop) {
-              clearInterval(runAnimation);
-          }
+        window.scrollBy(0, increments);
+        if (window.pageYOffset <= document.body.offsetTop) {
+          clearInterval(runAnimation);
+        }
       };
       // Loop the animation function
       var runAnimation = setInterval(animateScroll, 16);
-  });
-</script>
+    });
+  </script>
 
-<h2>Checkouts Report for Change Control #{{cc_id}}</h2>
+  <h2>Checkouts Report for Change Control #{{cc_id}}</h2>
 
-<a id="toc"><h3>Table of Contents</h3></a>
-<ul>
-{% for device_name in diff_output_dict.keys() %}
-<li><a href="#{{device_name}}">{{device_name}}</a></li>
-<ul>
-{% for command in diff_output_dict[device_name].keys() %}
-<li><a href="#{{device_name}}_{{command.strip()}}">{{command.strip()}}</a></li>
-{% endfor %}
-</ul>
-{% endfor %}
-</ul>
+  <a id="toc">
+    <h3>Table of Contents</h3>
+  </a>
+  <ul>
+    {% for device_name in diff_output_dict.keys() %}
+    <li><a href="#{{device_name}}">{{device_name}}</a></li>
+    <ul>
+      {% for command in diff_output_dict[device_name].keys() %}
+      <li><a href="#{{device_name}}_{{command.strip()}}">{{command.strip()}}</a></li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </ul>
 
-{% for device_name in diff_output_dict.keys() %}
-<a id="{{device_name}}"><h3>{{device_name}}</h3></a>
-{% for command, output in diff_output_dict[device_name].items() %}
-<a id="{{device_name}}_{{command.strip()}}"><h4>{{command.strip()}}</h4></a>
-{{output}}<br>
-{% endfor %}
-{% endfor %}
+  {% for device_name in diff_output_dict.keys() %}
+  <a id="{{device_name}}">
+    <h3>{{device_name}}</h3>
+  </a>
+  {% for command, output in diff_output_dict[device_name].items() %}
+  <a id="{{device_name}}_{{command.strip()}}">
+    <h4>{{command.strip()}}</h4>
+  </a>
+  {{output}}<br>
+  {% endfor %}
+  {% endfor %}
 </body>
+
 </html>

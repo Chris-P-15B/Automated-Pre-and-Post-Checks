@@ -41,7 +41,7 @@ def extract_mask_from_value(value):
     return value.split(".")[-1:][0]
 
 
-def ping(server="example.com", count=1, wait_sec=1):
+def ping(server="example.com", count=2, wait_sec=1):
     """Linux ping command passthru"""
     cmd = "ping -c {} -W {} {}".format(count, wait_sec, server).split(" ")
     try:

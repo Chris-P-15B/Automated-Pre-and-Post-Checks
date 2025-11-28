@@ -1,6 +1,6 @@
 # Automated Pre & Post Checks
 
-Copyright (c) 2022 - 2024, Chris Perkins
+Copyright (c) 2022 - 2025, Chris Perkins
 
 Connects via SSH to a specified list of network devices, automatically detects the platform & runs platform specific commands. Features additional role specific checks based on partial hostnames, optional ping sweep (pulls interface IP addresses via SNMP) & VRF aware BGP peer routes check. HTML post checks report with command output diffs is emailed out to specified email address as a zip file attachment.
 Each SSH session to a device is handled in a separate thread, for reduced execution times when running against multiple devices.
@@ -18,12 +18,13 @@ HTML top button courtesy of Heather Tovey: https://heathertovey.com/blog/floatin
 
 Caveats:
 1. IPv4 only for the ping sweep & BGP peer routes check.
-2. BGP peer check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
+2. BGP peer routes check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
 3. SMTP server authentication code path isn't exposed currently.
 4. SNMP v3 isn't supported currently.
 
 
 Version History:
+* v1.3.2 - Tidying the report by sorting checkouts & embedding CSS into HTML file.
 * v1.3.1 - Reworked to use PySNNP v7.1+.
 * v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 * v1.2.1 - Added forcing pre-check rerun.
@@ -44,7 +45,7 @@ Version History:
 ## Installation
 Copy the entire project into a directory on a Linux server that has both SSH & SNMP access to the network devices that checkouts will be performed on.
 
-Install the required Python packages via *pip install -r requirements.txt*
+Install the required Python packages via *pip3 install -r requirements.txt*
 
 ## Configuration
 *pre-post_checker.py* has a global variable "BASE_PATH" that should be updated to reflect the path where the tool is located. By default it is set to "./".
@@ -119,7 +120,7 @@ Command line parameters, for those with spaces enclose the parameter in "":
 * space delimited list of hostnames - must be resolvable via DNS or an IPv4 address
 
 For example:
-*python pre-post_checker.py 4321 Password123 device1.somewhere.com device2.somewhere.com device3.somewehere.com*
+*python3 pre-post_checker.py 4321 Password123 device1.somewhere.com device2.somewhere.com device3.somewehere.com*
 
 The first run of the tool will create a directory in the temporary files path, named after the change control ID. The output of the pre-checks will be stored as text files in this directory.
 
