@@ -25,7 +25,7 @@ Caveats:
 Version History:
 * v1.3.3 - Improved diff capabilities to reduce false positives. Removed Aruba CX devices workaround.
 * v1.3.2 - Tidying the report by sorting checkouts & embedding CSS into HTML file.
-* v1.3.1 - Reworked to use PySNNP v7.1+.
+* v1.3.1 - Reworked to use PySNMP v7.1+.
 * v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
 * v1.2.1 - Added forcing pre-check rerun.
 * v1.2 - Bug fix SNMP ping sweep.
