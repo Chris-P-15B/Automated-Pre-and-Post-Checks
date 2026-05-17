@@ -17,13 +17,13 @@ HTML top button courtesy of Heather Tovey: https://heathertovey.com/blog/floatin
 
 
 Caveats:
-1. IPv4 only for the ping sweep & BGP peer routes check.
-2. BGP peer routes check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
-3. SMTP server authentication code path isn't exposed currently.
-4. SNMP v3 isn't supported currently.
+1. BGP peer routes check supports IOS, IOS XE, NX-OS, EOS & JunOs platforms.
+2. SMTP server authentication code path isn't exposed currently.
+3. SNMP v3 isn't supported currently.
 
 
 Version History:
+* v1.3.3 - Improved diff capabilities to reduce false positives.
 * v1.3.2 - Tidying the report by sorting checkouts & embedding CSS into HTML file.
 * v1.3.1 - Reworked to use PySNNP v7.1+.
 * v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.

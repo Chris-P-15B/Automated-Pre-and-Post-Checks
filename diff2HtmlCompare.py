@@ -20,7 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Kludged into to use to generate tables of diffs by Chris Perkins in 2022
+"""
+Changes by Chris Perkins:
+2022 - kludged into to use to generate tables of diffs.
+2026 - improved diff to reduce false positives from trailing spaces or minor formatting differences.
+"""
 
 import io
 import os
@@ -270,9 +274,20 @@ class CodeDiff(object):
     diffCssFile = "./deps/diff.css"
     resetCssFile = "./deps/reset.css"
 
-    def __init__(self, fromfile, tofile, fromtxt=None, totxt=None, name=None):
+    def __init__(
+        self,
+        fromfile,
+        tofile,
+        fromtxt=None,
+        totxt=None,
+        name=None,
+        ignore_trailing_whitespace=True,
+        similarity_ratio=0.6,
+    ):
         self.filename = name
         self.fromfile = fromfile
+        self.ignore_trailing_whitespace = ignore_trailing_whitespace
+        self.similarity_ratio = similarity_ratio
         if fromtxt is None:
             try:
                 with io.open(fromfile) as f:
@@ -298,11 +313,86 @@ class CodeDiff(object):
             self.tolines = [n + "\n" for n in totxt.split("\n")]
         self.rightcode = "".join(self.tolines)
 
+    def _post_process_diffs(self, diffs):
+        """
+        Post-process diffs so when difflib marks consecutive lines as deleted then added
+        & the content is sufficiently similar (e.g. ARP tables with age differences),
+        instead convert them to 'change' markers.
+        """
+        processed = []
+        i = 0
+
+        while i < len(diffs):
+            (left_no, left_line), (right_no, right_line), change = diffs[i]
+
+            # Look ahead to find blocks of deletions followed by additions
+            if change and isinstance(left_no, int) and not isinstance(right_no, int):
+                # Found a deletion, look for matching block of deletions + additions
+                del_start = i
+                del_count = 0
+                # Count consecutive deletions
+                while i < len(diffs):
+                    (ln, ll), (rn, rl), ch = diffs[i]
+                    if ch and isinstance(ln, int) and not isinstance(rn, int):
+                        del_count += 1
+                        i += 1
+                    else:
+                        break
+
+                add_start = i
+                add_count = 0
+                # Count consecutive additions
+                while i < len(diffs):
+                    (ln, ll), (rn, rl), ch = diffs[i]
+                    if ch and not isinstance(ln, int) and isinstance(rn, int):
+                        add_count += 1
+                        i += 1
+                    else:
+                        break
+
+                # Convert equal number of deletions & additions that are similar into changes
+                if del_count == add_count and del_count > 0:
+                    # Calculate the similarity ratio of the blocks
+                    similar_enough = True
+                    for j in range(del_count):
+                        del_line = diffs[del_start + j][0][1]
+                        add_line = diffs[add_start + j][1][1]
+                        # Default is must be 60% similar to be a match
+                        matcher = difflib.SequenceMatcher(None, del_line, add_line)
+                        if matcher.ratio() < self.similarity_ratio:
+                            similar_enough = False
+                            break
+
+                    if similar_enough:
+                        # Convert to change entry with both line numbers
+                        for j in range(del_count):
+                            del_item = diffs[del_start + j]
+                            add_item = diffs[add_start + j]
+                            processed.append(
+                                (
+                                    (del_item[0][0], del_item[0][1]),  # left line
+                                    (add_item[1][0], add_item[1][1]),  # right line
+                                    True,  # change flag
+                                )
+                            )
+                        continue
+
+                # If not converted, add all the deletions & additions as is
+                for j in range(del_start, add_start + add_count):
+                    if j < len(diffs):
+                        processed.append(diffs[j])
+                continue
+
+            # Not a deletion + addition block, add as is
+            processed.append(diffs[i])
+            i += 1
+
+        return processed
+
     def getDiffDetails(
         self, fromdesc="", todesc="", context=False, numlines=5, tabSize=8
     ):
-        # change tabs to spaces before it gets more difficult after we insert
-        # markkup
+        # change tabs to spaces before it gets more difficult after we insert markkup
         def expand_tabs(line):
             # hide real spaces
             line = line.replace(" ", "\0")
@@ -316,20 +406,41 @@ class CodeDiff(object):
         self.fromlines = [expand_tabs(line) for line in self.fromlines]
         self.tolines = [expand_tabs(line) for line in self.tolines]
 
+        # Normalise lines for trailing whitespace if enabled
+        if self.ignore_trailing_whitespace:
+            normalised_fromlines = [
+                line.rstrip() + "\n" if line.endswith("\n") else line.rstrip()
+                for line in self.fromlines
+            ]
+            normalised_tolines = [
+                line.rstrip() + "\n" if line.endswith("\n") else line.rstrip()
+                for line in self.tolines
+            ]
+        else:
+            normalised_fromlines = self.fromlines
+            normalised_tolines = self.tolines
+
         # create diffs iterator which generates side by side from/to data
         if context:
             context_lines = numlines
         else:
             context_lines = None
 
+        # To reduce diff false positives from trailing spaces or minor formatting differences:
+        # Use charjunk=None to prevent false positives from whitespace differences in lines
+        # Use normalised lines to reduce false positives from trailing whitespace
         diffs = difflib._mdiff(
-            self.fromlines,
-            self.tolines,
+            normalised_fromlines,
+            normalised_tolines,
             context_lines,
             linejunk=None,
-            charjunk=difflib.IS_CHARACTER_JUNK,
+            charjunk=None,
         )
-        return list(diffs)
+
+        # Post-process to convert similar blocks of deletions + additions to changes instead
+        diffs_list = list(diffs)
+        diffs_list = self._post_process_diffs(diffs_list)
+        return diffs_list
 
     def format(self, options):
         self.diffs = self.getDiffDetails(self.fromfile, self.tofile)
