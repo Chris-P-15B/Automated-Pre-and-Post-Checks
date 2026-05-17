@@ -1,6 +1,6 @@
 # Automated Pre & Post Checks
 
-Copyright (c) 2022 - 2025, Chris Perkins
+Copyright (c) 2022 - 2026, Chris Perkins
 
 Connects via SSH to a specified list of network devices, automatically detects the platform & runs platform specific commands. Features additional role specific checks based on partial hostnames, optional ping sweep (pulls interface IP addresses via SNMP) & VRF aware BGP peer routes check. HTML post checks report with command output diffs is emailed out to specified email address as a zip file attachment.
 Each SSH session to a device is handled in a separate thread, for reduced execution times when running against multiple devices.
@@ -38,7 +38,7 @@ Version History:
 
 ## Pre-Requisites
 * Python 3.9+
-* NetMiko 4.1+
+* NetMiko 4.4+
 * PySNMP 7.1+
 * Runs on Linux
 

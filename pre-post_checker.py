@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2022 - 2025, Chris Perkins
+Copyright (c) 2022 - 2026, Chris Perkins
 Licence: BSD 3-Clause
 
 Automated pre & post checks with platform specific code paths, additional role checks based on partial
