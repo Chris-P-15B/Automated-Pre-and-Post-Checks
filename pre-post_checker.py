@@ -8,7 +8,7 @@ Automated pre & post checks with platform specific code paths, additional role c
 hostnames & optional ping sweep and/or VRF aware BGP peer routes check.
 Post check results are emailed to specified email address as a zip file attachment.
 
-v1.3.3 - Improved diff capabilities to reduce false positives.
+v1.3.3 - Improved diff capabilities to reduce false positives. Removed Aruba CX devices workaround.
 v1.3.2 - Tidying the report by sorting checkouts & embedding CSS into HTML file.
 v1.3.1 - Reworked to use PySNNP v7.1+.
 v1.3 - SNMP ping sweep now using "1.3.6.1.2.1.4.32" & "1.3.6.1.2.1.4.34" OIDs to support more vendors, IPv6 & interfaces with multiple IP addresses.
@@ -45,9 +45,7 @@ from netmiko.exceptions import (
     NetMikoAuthenticationException,
 )
 from paramiko.ssh_exception import SSHException
-
-# from netmiko.ssh_autodetect import SSHDetect
-from ssh_autodetect import SSHDetect
+from netmiko.ssh_autodetect import SSHDetect
 from netmiko.ssh_dispatcher import ConnectHandler
 from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 from email import encoders

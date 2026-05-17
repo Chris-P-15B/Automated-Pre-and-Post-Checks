@@ -29,7 +29,7 @@
             ]
         }
     },
-    "aruba_osswitch": {
+    "aruba_aoscx": {
         "community": "public",
         "commands": {
             "common": [
