@@ -7,8 +7,6 @@ Each SSH session to a device is handled in a separate thread, for reduced execut
 
 Contains modified version of diff2HtmlCompare, (c) 2016 Alex Goodman, https://github.com/wagoodman/diff2HtmlCompare & used under the MIT licence.
 
-Contains modified version of NetMiko's ssh_autodetect.py, (c) 2016 - 2023 Kirk Byers et al. https://github.com/ktbyers/netmiko & used under the MIT licence.
-
 Uses code from get_routing_table.py v2.0, (c) Jarmo Pietiläinen 2013 - 2014, http://z0b.kapsi.fi/networking.php & used under the zlib/libpng licence.
 
 IP address sorting courtesy of https://www.python4networkengineers.com/posts/how_to_sort_ip_addresses_with_python/
